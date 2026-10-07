@@ -65,7 +65,7 @@ function buildThreadParams(cwd, options = {}) {
     cwd,
     model: options.model ?? null,
     approvalPolicy: options.approvalPolicy ?? "never",
-    sandbox: options.sandbox ?? "read-only",
+    sandbox: requestedSandbox(options),
     serviceName: SERVICE_NAME,
     ephemeral: options.ephemeral ?? true
   };
@@ -78,8 +78,14 @@ function buildResumeParams(threadId, cwd, options = {}) {
     cwd,
     model: options.model ?? null,
     approvalPolicy: options.approvalPolicy ?? "never",
-    sandbox: options.sandbox ?? "read-only"
+    sandbox: requestedSandbox(options)
   };
+}
+
+// null is a deliberate request to defer to config.toml, so `??` would wrongly
+// downgrade it to read-only.
+function requestedSandbox(options) {
+  return options.sandbox === undefined ? "read-only" : options.sandbox;
 }
 
 /** @returns {UserInput[]} */

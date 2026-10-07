@@ -37,10 +37,16 @@ export function resolveStateDir(cwd) {
 
   const slugSource = path.basename(workspaceRoot) || "workspace";
   const slug = slugSource.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "workspace";
-  const hash = createHash("sha256").update(canonicalWorkspaceRoot).digest("hex").slice(0, 16);
+  // A broker serves whichever Codex account it was spawned with, so state that
+  // is shared across CODEX_HOMEs would hand one account's broker to another.
+  const hash = createHash("sha256").update(`${canonicalWorkspaceRoot}\0${resolveCodexHome()}`).digest("hex").slice(0, 16);
   const pluginDataDir = process.env[PLUGIN_DATA_ENV];
   const stateRoot = pluginDataDir ? path.join(pluginDataDir, "state") : FALLBACK_STATE_ROOT_DIR;
   return path.join(stateRoot, `${slug}-${hash}`);
+}
+
+export function resolveCodexHome() {
+  return path.resolve(process.env.CODEX_HOME || path.join(os.homedir(), ".codex"));
 }
 
 export function resolveStateFile(cwd) {

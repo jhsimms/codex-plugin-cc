@@ -40,6 +40,24 @@ test("resolveStateDir uses CLAUDE_PLUGIN_DATA when it is provided", () => {
   }
 });
 
+test("resolveStateDir gives each Codex account its own state in the same workspace", () => {
+  const workspace = makeTempDir();
+
+  const personalDir = withCodexHome(makeTempDir(), () => resolveStateDir(workspace));
+  const workDir = withCodexHome(makeTempDir(), () => resolveStateDir(workspace));
+
+  assert.notEqual(personalDir, workDir);
+});
+
+test("resolveStateDir treats an unset CODEX_HOME as the default ~/.codex", () => {
+  const workspace = makeTempDir();
+
+  const unsetDir = withCodexHome(undefined, () => resolveStateDir(workspace));
+  const defaultDir = withCodexHome(path.join(os.homedir(), ".codex"), () => resolveStateDir(workspace));
+
+  assert.equal(unsetDir, defaultDir);
+});
+
 test("saveState prunes dropped job artifacts when indexed jobs exceed the cap", () => {
   const workspace = makeTempDir();
   const stateFile = resolveStateFile(workspace);
@@ -103,3 +121,23 @@ test("saveState prunes dropped job artifacts when indexed jobs exceed the cap", 
       .sort()
   );
 });
+
+function withCodexHome(codexHome, fn) {
+  const previous = process.env.CODEX_HOME;
+
+  if (codexHome === undefined) {
+    delete process.env.CODEX_HOME;
+  } else {
+    process.env.CODEX_HOME = codexHome;
+  }
+
+  try {
+    return fn();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.CODEX_HOME;
+    } else {
+      process.env.CODEX_HOME = previous;
+    }
+  }
+}

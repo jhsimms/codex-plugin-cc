@@ -36,13 +36,13 @@
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
 import { readJsonFile } from "./fs.mjs";
 import { BROKER_BUSY_RPC_CODE, BROKER_ENDPOINT_ENV, CodexAppServerClient } from "./app-server.mjs";
 import { loadBrokerSession } from "./broker-lifecycle.mjs";
 import { binaryAvailable } from "./process.mjs";
+import { resolveCodexHome } from "./state.mjs";
 
 const SERVICE_NAME = "claude_code_codex_plugin";
 const TASK_THREAD_PREFIX = "Codex Companion Task";
@@ -654,10 +654,6 @@ async function withDirectAppServer(cwd, fn) {
   } finally {
     await client.close();
   }
-}
-
-function resolveCodexHome() {
-  return path.resolve(process.env.CODEX_HOME || path.join(os.homedir(), ".codex"));
 }
 
 function sourceContentSha256(sourcePath) {
